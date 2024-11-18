@@ -8,8 +8,9 @@ metadata:
 spec:
   replicas: 2
   selector:
-    app: redis
-    role: replica
+    matchLabels:
+      app: redis
+      role: replica
   template:
     metadata:
       labels:
