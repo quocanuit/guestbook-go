@@ -1,5 +1,5 @@
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
   name: guestbook
   labels:
@@ -8,6 +8,7 @@ spec:
   ports:
   - port: 3000
     targetPort: http-server
+    protocol: TCP
   selector:
     app: guestbook
   type: LoadBalancer
