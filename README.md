@@ -1,5 +1,6 @@
-# Install Docker
-
+# Deploying guessbook-go
+## PrivateInstance
+## 1. Install Docker
 ```
 sudo apt update
 
@@ -21,28 +22,23 @@ sudo usermod -aG docker ${USER}
 
 su - ${USER}
 ```
-
-# Install Kubectl
-
+## 2. Install Kubectl
 ```
 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
 
 sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 ```
-
-# Install Minikube
-
+## 3. Install Minikube
 ```
 curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
 
 sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
 ```
-
-# Deploy app
-
+## 4. Deploy app
 ```
 minikube start
-
+```
+```
 kubectl apply -f guestbook-go/redis-master-controller.yaml
 
 kubectl apply -f guestbook-go/redis-master-service.yaml
@@ -54,91 +50,10 @@ kubectl apply -f guestbook-go/redis-replica-service.yaml
 kubectl apply -f guestbook-go/guestbook-controller.yaml
 
 kubectl apply -f guestbook-go/guestbook-service.yaml
-
 ```
-
-# Config 
-
 ```
 minikube tunnel
-
-kubectl port-forward --address 0.0.0.0 svc/guestbook 3000:3000
 ```
-
-# On Bastion
-
-## Install Nginx
-```
-sudo apt update
-
-sudo apt install nginx
-
-systemctl status nginx
-
-sudo nano /etc/nginx/sites-available/default
-```
-
-```
-    location / {
-        proxy_set_header Host "localhost";
-        proxy_pass http://127.0.0.1:3000;
-    }
-```
-
-```
-sudo service nginx restart
-```
-
-## Install Jenkins
-
-```
-sudo wget -O /usr/share/keyrings/jenkins-keyring.asc \
-  https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
-echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc]" \
-  https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
-  /etc/apt/sources.list.d/jenkins.list > /dev/null
-sudo apt-get update
-sudo apt-get install jenkins
-```
-```
-sudo apt update
-sudo apt install fontconfig openjdk-17-jre
-java -version
-openjdk version "17.0.8" 2023-07-18
-OpenJDK Runtime Environment (build 17.0.8+7-Debian-1deb12u1)
-OpenJDK 64-Bit Server VM (build 17.0.8+7-Debian-1deb12u1, mixed mode, sharing)
-```
-
-
-# Install Plugins:
-
-CSRF Protection: Enable proxy compatibility
-
-SSH Pipeline Steps, Go, Kubernetes, Docker, Docker Commons, Docker Pipeline, SonarQube Scanner
-
-# creds
-
-private-instance-ssh
-
-docker-registry-credentials
-
-github-credentials
-
-# Tools configuration
-
-Go Installation
-
-Docker Installation
-
-# zzz
-```
-sudo apt update
-sudo apt install -y docker.io golang
-sudo usermod -aG docker jenkins
-sudo systemctl restart jenkins
-```
-
-
 ```
 sudo tee /etc/systemd/system/guestbook-port-forward.service << EOF
 [Unit]
@@ -158,33 +73,107 @@ EOF
 ```
 ```
 sudo systemctl daemon-reload
+
 sudo systemctl enable guestbook-port-forward
+
 sudo systemctl start guestbook-port-forward
 ```
-
-# SonarQube
-
+# PublicInstance
+## 1. Install Nginx
 ```
-docker pull sonarqube
-docker run -d --name sonarqube -p 9000:9000 sonarqube
-```
-```
-admin
-akt@SonarQub3
-```
-```
-create new API Token
+sudo apt update
 
-Follow "Analyze your project with Jenkins"
+sudo apt install nginx
 
-Add SonarQube server
+systemctl status nginx
 
+sudo nano /etc/nginx/sites-available/default
+```
+```
+# add the following lines to /etc/nginx/sites-available/default
+
+    location / {
+        proxy_set_header Host "localhost";
+        proxy_pass http://127.0.0.1:3000;
+    }
+```
+```
+sudo service nginx restart
+```
+Access: \<PublicInstanceIP>
+## 2. Install Jenkins
+```
+sudo wget -O /usr/share/keyrings/jenkins-keyring.asc \
+  https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+
+echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc]" \
+  https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+  /etc/apt/sources.list.d/jenkins.list > /dev/null
+
+sudo apt-get update
+
+sudo apt-get install jenkins
+```
+```
+sudo apt update
+
+sudo apt install fontconfig openjdk-17-jre
+
+java -version
+```
+```
+sudo apt update
+
+sudo apt install -y docker.io golang
+
+sudo usermod -aG docker jenkins
+
+sudo systemctl restart jenkins
+```
+Access: \<PublicInstanceIP>:8080
+## 3. Install SonarQube
+```
 sudo apt install nodejs
 ```
-test 1
-test 2
-test 3
-test 4
-test 5
-test 6
-test 7
+```
+docker pull sonarqube
+
+docker run -d --name sonarqube -p 9000:9000 sonarqube
+
+# docker start sonarqube # whenever reboot instance
+```
+Access: \<PublicInstanceIP>:9000
+
+- Create local project (guessbook-go)
+- My Account > Security > Generate Tokens
+## 4. Configure Jenkins
+- Enable proxy compatibility
+
+![alt text](assets/image.png)
+
+- Plugins: SSH Pipeline Steps, Go, Kubernetes, Docker, Docker Commons, Docker Pipeline, SonarQube Scanner
+
+- Credentials: SSH key for PrivateInstance, Dockerhub credentials, Github credentials, SonarQube authentication token.
+
+![alt text](assets/image-2.png)
+
+- Manage Jenkins > System > Add SonarQube (sonar-server)
+- Manage Jenkins > Tools:
+  - SonarQube Scanner installations (sonar-scanner)
+  - Docker installations (docker)
+  - Go installations (go1.20)
+
+## 5. Create Pipeline
+
+- Jenkins:
+  - New Item > Pipeline
+  - Build Triggers: GitHub hook trigger for GITScm polling
+  - Pipeline: Pipeline script from SCM
+- Github:
+  - Repository > Settings > Webhooks > Add webhook
+  - PayloadURL: http://<PublicInstanceIP>:8080/github-webhook/
+  - Content type: application/json
+
+## 6. Finish
+
+![alt text](assets/image-3.png)
