@@ -176,6 +176,8 @@ akt@SonarQub3
 create new API Token
 
 Follow "Analyze your project with Jenkins"
+
+Add SonarQube server
 ```
 test 1
 test 2
