@@ -15,11 +15,13 @@ pipeline {
     }
 
     stages{
-        stage('Source'){
-            steps{
-                echo "Checking out repo"
-                git url: 'https://github.com/quocanuit/guestbook-go.git', branch: 'master',
-                credentialsId: "${GITHUB_CREDENTIALS}"
+        stage('SCM'){
+            checkout scm
+        }
+        stage('SonarQube Analysis') {
+            def scannerHome = tool 'SonarScanner';
+            withSonarQubeEnv() {
+            sh "${scannerHome}/bin/sonar-scanner"
             }
         }
         stage('Build'){
