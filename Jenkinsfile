@@ -41,6 +41,15 @@ pipeline {
                 }
             }
         }
+        stage('Trivy Image Scan'){
+            steps{
+                script{
+                    echo "Starting Trivy scan"
+                    sh "trivy image ${DOCKER_IMAGE}:v3.${env.BUILD_ID}"
+                    echo "Trivy scan completed"
+                }
+            }
+        }
         stage('Push Image'){
             steps{
                 echo "Pushing to docker hub"
