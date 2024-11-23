@@ -7,7 +7,7 @@ pipeline {
 
     environment {
         DOCKERHUB_CREDENTIALS = 'docker-registry-credentials'
-        DOCKER_IMAGE = 'quocanuit/guessbook'
+        DOCKER_IMAGE = 'quocanuit/guestbook'
         GITHUB_CREDENTIALS = 'github-credentials'
         PRIVATE_INSTANCE = '192.168.2.81'
         SSH_CREDENTIALS = 'private-instance-ssh'

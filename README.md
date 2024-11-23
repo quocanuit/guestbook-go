@@ -1,5 +1,5 @@
 # Deploying guessbook-go
-## PrivateInstance
+# PrivateInstance
 ## 1. Install Docker
 ```
 sudo apt update
@@ -146,7 +146,19 @@ Access: \<PublicInstanceIP>:9000
 
 - Create local project (guessbook-go)
 - My Account > Security > Generate Tokens
-## 4. Configure Jenkins
+## 4. Install Trivy
+```
+sudo apt-get install wget apt-transport-https gnupg lsb-release
+
+wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+
+echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+
+sudo apt-get update
+
+sudo apt-get install trivy
+```
+## 5. Configure Jenkins
 - Enable proxy compatibility
 
 ![alt text](assets/image.png)
@@ -163,7 +175,7 @@ Access: \<PublicInstanceIP>:9000
   - Docker installations (docker)
   - Go installations (go1.20)
 
-## 5. Create Pipeline
+## 6. Create Pipeline
 
 - Jenkins:
   - New Item > Pipeline
@@ -174,6 +186,6 @@ Access: \<PublicInstanceIP>:9000
   - PayloadURL: http://<PublicInstanceIP>:8080/github-webhook/
   - Content type: application/json
 
-## 6. Finish
+## 7. Finish
 
 ![alt text](assets/image-3.png)
